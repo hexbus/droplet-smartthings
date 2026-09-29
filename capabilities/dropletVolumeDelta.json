@@ -1,0 +1,28 @@
+{
+  "name": "dropletVolumeDelta",
+  "attributes": {
+    "volumeDelta": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "mL"
+            ],
+            "default": "mL"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "value"
+        ]
+      },
+      "enumCommands": []
+    }
+  },
+  "commands": {}
+}

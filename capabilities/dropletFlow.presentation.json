@@ -1,0 +1,34 @@
+{
+  "dashboard": {
+    "states": [
+      {
+        "label": "{{flow.value}} L/min"
+      }
+    ],
+    "actions": [],
+    "basicPlus": []
+  },
+  "detailView": [
+    {
+      "label": "Flow rate",
+      "displayType": "state",
+      "state": {
+        "label": "{{flow.value}} L/min"
+      }
+    }
+  ],
+  "automation": {
+    "conditions": [
+      {
+        "label": "Flow rate",
+        "displayType": "numberField",
+        "numberField": {
+          "value": "flow.value",
+          "valueType": "number",
+          "unit": "L/min"
+        }
+      }
+    ],
+    "actions": []
+  }
+}

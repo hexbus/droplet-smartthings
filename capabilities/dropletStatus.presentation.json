@@ -1,0 +1,95 @@
+{
+  "dashboard": {
+    "states": [
+      {
+        "label": "{{connection.value}}"
+      }
+    ],
+    "actions": [],
+    "basicPlus": []
+  },
+  "detailView": [
+    {
+      "label": "Connection",
+      "displayType": "state",
+      "state": {
+        "label": "{{connection.value}}"
+      }
+    },
+    {
+      "label": "Hydrific server",
+      "displayType": "state",
+      "state": {
+        "label": "{{server.value}}"
+      }
+    },
+    {
+      "label": "Sensor signal",
+      "displayType": "state",
+      "state": {
+        "label": "{{signal.value}}"
+      }
+    },
+    {
+      "label": "High flow alert",
+      "displayType": "state",
+      "state": {
+        "label": "{{highFlow.value}}"
+      }
+    },
+    {
+      "label": "Unusual flow alert",
+      "displayType": "state",
+      "state": {
+        "label": "{{unusualFlow.value}}"
+      }
+    }
+  ],
+  "automation": {
+    "conditions": [
+      {
+        "label": "High flow alert",
+        "displayType": "list",
+        "list": {
+          "value": "highFlow.value",
+          "alternatives": [
+            {
+              "key": "unknown",
+              "value": "Unknown"
+            },
+            {
+              "key": "clear",
+              "value": "Clear"
+            },
+            {
+              "key": "detected",
+              "value": "Detected"
+            }
+          ]
+        }
+      },
+      {
+        "label": "Unusual flow alert",
+        "displayType": "list",
+        "list": {
+          "value": "unusualFlow.value",
+          "alternatives": [
+            {
+              "key": "unknown",
+              "value": "Unknown"
+            },
+            {
+              "key": "clear",
+              "value": "Clear"
+            },
+            {
+              "key": "detected",
+              "value": "Detected"
+            }
+          ]
+        }
+      }
+    ],
+    "actions": []
+  }
+}

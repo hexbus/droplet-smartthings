@@ -1,0 +1,34 @@
+{
+  "dashboard": {
+    "states": [
+      {
+        "label": "{{volumeDelta.value}} mL"
+      }
+    ],
+    "actions": [],
+    "basicPlus": []
+  },
+  "detailView": [
+    {
+      "label": "Volume since last report",
+      "displayType": "state",
+      "state": {
+        "label": "{{volumeDelta.value}} mL"
+      }
+    }
+  ],
+  "automation": {
+    "conditions": [
+      {
+        "label": "Volume since last report",
+        "displayType": "numberField",
+        "numberField": {
+          "value": "volumeDelta.value",
+          "valueType": "number",
+          "unit": "mL"
+        }
+      }
+    ],
+    "actions": []
+  }
+}

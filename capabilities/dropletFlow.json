@@ -1,0 +1,28 @@
+{
+  "name": "dropletFlow",
+  "attributes": {
+    "flow": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "L/min"
+            ],
+            "default": "L/min"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "value"
+        ]
+      },
+      "enumCommands": []
+    }
+  },
+  "commands": {}
+}

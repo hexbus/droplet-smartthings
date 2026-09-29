@@ -1,0 +1,7 @@
+name: Hydrific Droplet
+packageKey: hexbus.droplet.direct.v1
+description: Direct local Hydrific Droplet integration using its WebSocket API
+vendorSupportInformation: https://github.com/hexbus/droplet-smartthings/issues
+permissions:
+  lan: {}
+  discovery: {}
