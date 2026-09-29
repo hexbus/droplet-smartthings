@@ -2,7 +2,7 @@
 
 An unofficial SmartThings Edge driver that connects directly to Hydrific Droplet over your local network. No MQTT broker, Home Assistant installation, or always-on computer is needed to run it.
 
-**Status:** First development version installed on the development hub. Local protocol and lifecycle tests pass. Pairing and live readings from a physical Droplet still need validation.
+**Status:** Development driver installed and paired successfully with a physical Droplet. Live flow, volume changes, server connectivity, and signal readings are verified. Local protocol and lifecycle tests pass. High/unusual flow alert delivery remains under investigation; do not assume unavailable alerts mean normal.
 
 ## Setup
 
@@ -19,7 +19,7 @@ The code is stored as a SmartThings device preference, not in this repository. D
 - Current flow, in L/min.
 - Volume **since the preceding Droplet report**, in mL. This is not a daily or lifetime total. Small negative values are retained.
 - Sensor signal and Hydrific server connectivity.
-- High flow and unusual flow alerts: `detected`, `clear`, or `unknown`.
+- High flow and unusual flow alerts: `detected`, `clear`, or `unknown` (displayed as **Alert**, **Clear**, or **—**). A dash means no current alert status is available; it does not mean clear.
 
 The driver does not turn unavailable alerts into a clear state. Alerts become unknown after disconnect, loss of Hydrific server connectivity, or 90 seconds without an alert update. Existing flow/volume values can remain visible as historical values when the device is offline.
 
@@ -35,7 +35,7 @@ The optional address field overrides discovery for an already discovered device;
 
 Connections use TLS to the local `/ws` endpoint. Hydrific's documented protocol uses a device certificate without CA/hostname verification; this driver follows that behavior and only connects to private or link-local IPv4 addresses. Encryption does not authenticate the server certificate, so use a trusted LAN. Device-ID pinning is an additional consistency check, not cryptographic certificate pinning. No network/router security settings are changed.
 
-The driver does not log pairing codes, authorization headers, or sensor payloads. It reconnects with bounded backoff and handles server ping/pong frames. Droplet supports at most two simultaneous WebSocket clients.
+The driver does not log pairing codes, authorization headers, or sensor payloads. It reconnects with bounded backoff and handles server ping/pong frames. Hydrific documents at most two simultaneous WebSocket clients. For troubleshooting, prefer a single client: [an upstream firmware report](https://github.com/Hydrific/pydroplet/issues/9) describes missed frames with concurrent clients. The driver logs a one-time count of received and recognized alert fields after its initial 90 seconds, without logging the pairing code or raw message contents.
 
 ## Development
 
@@ -45,9 +45,16 @@ luajit tests/lifecycle.lua
 smartthings edge:drivers:package driver --build-only dist/droplet.zip
 ```
 
-Create `dist/` before building. `driver/` contains the deployable Lua sources and device profile; `capabilities/` contains the custom capabilities and their mobile presentations. The current profile references capability IDs in the development account's namespace. Other developers must create capabilities in their own namespace and update those references.
+Create `dist/` before building. `driver/` contains the deployable Lua sources and device profile; `capabilities/` contains the custom capabilities and their mobile presentations. The English display labels are defined in `capabilities/*.en.json`. Apply those using `smartthings capabilities:translations:upsert`; use `capabilities:presentation:update` for existing presentations. The current profile references capability IDs in the development account's namespace. Other developers must create capabilities in their own namespace and update those references.
 
 The development channel is **Hydrific Droplet** and uses the published [terms of use](https://github.com/hexbus/droplet-smartthings/blob/main/TERMS.md). No public sharing invitation has been created. The public repository alone does not grant channel access.
+
+## Troubleshooting
+
+- After a driver/display update, leave the device page and reopen it. The mobile app may cache older labels. You should not need to pair again.
+- The pairing preference is text even if the mobile app displays a length range. Enter the letters and numbers from Droplet. The driver strips whitespace and accepts lowercase entry.
+- If flow works but alerts remain unavailable, confirm alert configuration in Droplet and cloud connectivity. Do not replace missing alert fields with `clear`. Use the driver diagnostic counts to distinguish absent messages from unrecognized values.
+- If the CLI intermittently returns an undefined HTTP status on a dual-stack Mac, retry the command with `NODE_OPTIONS=--dns-result-order=ipv4first`; this affects that command only.
 
 ## References
 

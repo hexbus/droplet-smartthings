@@ -10,7 +10,7 @@
   },
   "detailView": [
     {
-      "label": "Volume since last report",
+      "label": "Volume change (last report)",
       "displayType": "state",
       "state": {
         "label": "{{volumeDelta.value}} mL"

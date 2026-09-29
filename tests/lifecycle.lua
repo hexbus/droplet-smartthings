@@ -7,6 +7,7 @@ local function scenario(messages,pinned,code,manual)
   function device:emit_event(e) self.events[#self.events+1]=e end
   function device:set_field(k,v) self.fields[k]=v end
   function device:get_field(k) return self.fields[k] end
+  function device:try_update_metadata(meta) self.updated_profile=meta.profile end
   function device:online() self.went_online=true end
   function device:offline() self.went_offline=true end
   local function cap(id)
@@ -21,7 +22,7 @@ local function scenario(messages,pinned,code,manual)
   package.loaded['cosock.ssl']={wrap=function() return sock end}
   package.loaded['st.mdns']={discover=function() return {found={{host_info={name='droplet-test.local',address='192.168.1.20',port=443}}}} end}
   package.loaded['st.json']={decode=function(value) return value end}
-  package.loaded.log={warn=function(msg) assert(not msg:find('TESTCODE',1,true)) end}
+  package.loaded.log={warn=function(msg) assert(not msg:find('TESTCODE',1,true)) end,info=function(msg) assert(not msg:find('TESTCODE',1,true)) end}
   package.loaded.websocket={client=function()
     return {handshake=function() end,receive=function(self)
       local entry=table.remove(messages,1)
@@ -43,6 +44,7 @@ local function test(name,fn) fn();count=count+1;print('ok '..count..' - '..name)
 test('pins authenticated metadata before emitting readings',function()
   local d,v=scenario({{flow=999},{ids='Droplet-ABCD'},{server='Connected',flow=0,volume=-2,high_leak='OFF'}})
   assert(d.fields.droplet_id=='Droplet-ABCD' and d.went_online)
+  assert(d.updated_profile=='droplet' and d.fields.profile_revision==2)
   assert(#v('flow')==1 and v('flow')[1].value==0)
   assert(v('volumeDelta')[1].value==-2)
 end)

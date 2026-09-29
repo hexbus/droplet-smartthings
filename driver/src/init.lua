@@ -38,6 +38,11 @@ local function stop(device)
 end
 local function emit_readings(device, session, msg)
   local values=readings.parse(msg)
+  if values.flow or values.volumeDelta then session.state_count=session.state_count+1 end
+  if msg.high_leak~=nil then session.high_count=session.high_count+1 end
+  if msg.low_leak~=nil then session.low_count=session.low_count+1 end
+  if values.highFlow then session.high_valid=session.high_valid+1 end
+  if values.unusualFlow then session.low_valid=session.low_valid+1 end
   if values.flow then device:emit_event(flow.flow({value=values.flow,unit='L/min'})) end
   if values.volumeDelta then device:emit_event(volume.volumeDelta({value=values.volumeDelta,unit='mL'})) end
   for _, key in ipairs({'server','signal'}) do if values[key] then event(device,key,values[key]) end end
@@ -66,10 +71,16 @@ local function connect(device, session, address, port, code)
   local verified=false
   local metadata_deadline=socket.gettime()+15
   session.server=nil; session.alert_times={}
+  session.state_count,session.high_count,session.low_count=0,0,0
+  session.high_valid,session.low_valid=0,0
   unknown_alerts(device)
   ws.on_activity=function()
     if session.stopped then error('Session stopped') end
     if not verified and socket.gettime()>metadata_deadline then error('Droplet metadata missing') end
+    if session.connected_at and not session.diagnosed and socket.gettime()-session.connected_at>90 then
+      session.diagnosed=true
+      log.info(string.format('Droplet first 90s: %d state reports; high-flow fields %d (recognized %d); unusual-flow fields %d (recognized %d)',session.state_count,session.high_count,session.high_valid,session.low_count,session.low_valid))
+    end
     for key,time in pairs(session.alert_times) do
       if socket.gettime()-time>90 then event(device,key,'unknown'); session.alert_times[key]=nil end
     end
@@ -83,6 +94,7 @@ local function connect(device, session, address, port, code)
         if pinned and pinned~=msg.ids then error('Droplet identity changed; connection refused') end
         if not pinned then device:set_field('droplet_id',msg.ids,{persist=true}) end
         verified=true
+        session.connected_at=session.connected_at or socket.gettime()
         session.healthy=true
         device:online(); event(device,'connection','Connected')
       end
@@ -137,10 +149,18 @@ local function discovery(driver)
     end
   end
 end
+local function init(driver,device)
+  -- Apply updated preference wording to devices paired with the first profile.
+  if device:get_field('profile_revision') ~= 2 then
+    device:try_update_metadata({profile='droplet'})
+    device:set_field('profile_revision',2,{persist=true})
+  end
+  start(driver,device)
+end
 local driver=Driver('hydrific-droplet',{
   discovery=discovery,
   supported_capabilities={flow,volume,status,caps.refresh},
-  lifecycle_handlers={init=start,infoChanged=start,removed=function(_,device) stop(device) end},
+  lifecycle_handlers={init=init,infoChanged=start,removed=function(_,device) stop(device) end},
   capability_handlers={[caps.refresh.ID]={[caps.refresh.commands.refresh.NAME]=start}}
 })
 driver:run()

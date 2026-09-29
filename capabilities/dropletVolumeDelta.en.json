@@ -1,0 +1,12 @@
+{
+  "tag": "en",
+  "label": "Volume change",
+  "attributes": {
+    "volumeDelta": {
+      "label": "Volume change since last report",
+      "displayTemplate": "{{attribute}}: {{value}}",
+      "i18n": {}
+    }
+  },
+  "commands": {}
+}

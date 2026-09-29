@@ -1,0 +1,56 @@
+{
+  "tag": "en",
+  "label": "Droplet status",
+  "attributes": {
+    "connection": {
+      "label": "Droplet connection",
+      "displayTemplate": "{{attribute}}: {{value}}",
+      "i18n": {}
+    },
+    "server": {
+      "label": "Hydrific server",
+      "displayTemplate": "{{attribute}}: {{value}}",
+      "i18n": {}
+    },
+    "signal": {
+      "label": "Sensor signal",
+      "displayTemplate": "{{attribute}}: {{value}}",
+      "i18n": {}
+    },
+    "highFlow": {
+      "label": "High flow alert",
+      "displayTemplate": "{{attribute}}: {{value}}",
+      "i18n": {
+        "value": {
+          "clear": {
+            "label": "Clear"
+          },
+          "detected": {
+            "label": "Alert"
+          },
+          "unknown": {
+            "label": "Unknown"
+          }
+        }
+      }
+    },
+    "unusualFlow": {
+      "label": "Unusual flow alert",
+      "displayTemplate": "{{attribute}}: {{value}}",
+      "i18n": {
+        "value": {
+          "clear": {
+            "label": "Clear"
+          },
+          "detected": {
+            "label": "Alert"
+          },
+          "unknown": {
+            "label": "Unknown"
+          }
+        }
+      }
+    }
+  },
+  "commands": {}
+}

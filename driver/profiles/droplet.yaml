@@ -13,13 +13,11 @@ components:
 preferences:
   - name: pairingCode
     title: Droplet pairing code
-    description: Enter the code from Droplet Settings > Smart Home Integrations > Home Assistant Core.
+    description: Paste the letters and numbers from the Droplet app pairing-code screen. This is a text code, not a number.
     required: false
     preferenceType: string
     definition:
       stringType: password
-      minLength: 0
-      maxLength: 255
       default: ""
   - name: ipAddress
     title: IP address (optional)
