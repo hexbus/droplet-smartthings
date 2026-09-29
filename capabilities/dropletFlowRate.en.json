@@ -1,0 +1,12 @@
+{
+  "tag": "en",
+  "label": "Flow rate",
+  "attributes": {
+    "flow": {
+      "label": "Flow rate",
+      "displayTemplate": "{{attribute}}: {{value}}",
+      "i18n": {}
+    }
+  },
+  "commands": {}
+}

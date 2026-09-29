@@ -1,0 +1,34 @@
+{
+  "dashboard": {
+    "states": [
+      {
+        "label": "{{flow.value}} {{flow.unit}}"
+      }
+    ],
+    "actions": [],
+    "basicPlus": []
+  },
+  "detailView": [
+    {
+      "label": "Flow rate",
+      "displayType": "state",
+      "state": {
+        "label": "{{flow.value}} {{flow.unit}}"
+      }
+    }
+  ],
+  "automation": {
+    "conditions": [
+      {
+        "label": "Flow rate",
+        "displayType": "numberField",
+        "numberField": {
+          "value": "flow.value",
+          "valueType": "number",
+          "unit": "flow.unit"
+        }
+      }
+    ],
+    "actions": []
+  }
+}

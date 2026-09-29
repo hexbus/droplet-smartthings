@@ -57,6 +57,8 @@ Another developer [reported the same missing fields after upgrading from v1.4.0 
 
 The driver keeps these statuses unavailable (**—**) until valid alert messages arrive. Re-pairing or changing alert thresholds is not an established workaround. Flow and volume reporting can continue independently.
 
+The active flow capability is `dictionaryguide60352.dropletflowrate`; the original `dropletflow` files are retained as legacy definitions. Updating the original unit enum did not refresh the hub's cached schema, so existing devices migrate automatically to the new capability. Existing routines referencing the original flow capability must select the new Flow rate condition again. Pairing and other capabilities are retained.
+
 ## Troubleshooting
 
 - After a driver/display update, leave the device page and reopen it. The mobile app may cache older labels. You should not need to pair again.

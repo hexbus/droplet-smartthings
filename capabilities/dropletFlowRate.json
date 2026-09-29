@@ -1,0 +1,29 @@
+{
+  "name": "dropletFlowRate",
+  "attributes": {
+    "flow": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "L/min",
+              "gal/min"
+            ],
+            "default": "L/min"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "value"
+        ]
+      },
+      "enumCommands": []
+    }
+  },
+  "commands": {}
+}

@@ -8,7 +8,7 @@ local json = require 'st.json'
 local log = require 'log'
 local websocket = require 'websocket'
 local readings = require 'readings'
-local flow = caps['dictionaryguide60352.dropletflow']
+local flow = caps['dictionaryguide60352.dropletflowrate']
 local volume = caps['dictionaryguide60352.dropletvolumedelta']
 local status = caps['dictionaryguide60352.dropletstatus']
 local sessions, discovered = {}, {}
@@ -38,7 +38,9 @@ local function stop(device)
 end
 local function emit_flow(device, liters)
   local gallons=device.preferences.flowUnit=='gpm'
-  device:emit_event(flow.flow({value=gallons and liters/3.785411784 or liters,unit=gallons and 'gal/min' or 'L/min'}))
+  local ok,result=pcall(flow.flow,{value=gallons and liters/3.785411784 or liters,unit=gallons and 'gal/min' or 'L/min'})
+  if ok then device:emit_event(result)
+  else log.warn('Flow event validation failed: '..tostring(result)) end
 end
 local function emit_readings(device, session, msg)
   local values=readings.parse(msg)
@@ -163,10 +165,10 @@ local function discovery(driver)
   end
 end
 local function init(driver,device)
-  -- Apply the flow-unit preference to already paired devices.
-  if device:get_field('profile_revision') ~= 3 then
+  -- Migrate the flow capability to avoid stale hub-side unit schemas.
+  if device:get_field('profile_revision') ~= 4 then
     device:try_update_metadata({profile='droplet'})
-    device:set_field('profile_revision',3,{persist=true})
+    device:set_field('profile_revision',4,{persist=true})
   end
   start(driver,device)
 end

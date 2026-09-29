@@ -1,7 +1,7 @@
 -- Run the actual driver lifecycle against mocked Edge APIs.
 package.path='driver/src/?.lua;'..package.path
 local count=0
-local function scenario(messages,pinned,code,manual,unit)
+local function scenario(messages,pinned,code,manual,unit,reject_flow)
   local options,task,time,connects=nil,nil,0,0
   local device={id='test-device',device_network_id='droplet:droplet-test.local',preferences={pairingCode=code or 'TESTCODE',ipAddress=manual or '',flowUnit=unit},events={},fields={droplet_id=pinned}}
   function device:emit_event(e) self.events[#self.events+1]=e end
@@ -11,10 +11,10 @@ local function scenario(messages,pinned,code,manual,unit)
   function device:online() self.went_online=true end
   function device:offline() self.went_offline=true end
   local function cap(id)
-    return setmetatable({ID=id},{__index=function(_,attribute) return function(value) return {id=id,attribute=attribute,value=value} end end})
+    return setmetatable({ID=id},{__index=function(_,attribute) return function(value) if reject_flow and attribute=='flow' then error('Unsupported flow unit') end; return {id=id,attribute=attribute,value=value} end end})
   end
   local capabilities={refresh={ID='refresh',commands={refresh={NAME='refresh'}}}}
-  for _,id in ipairs({'dropletflow','dropletvolumedelta','dropletstatus'}) do capabilities['dictionaryguide60352.'..id]=cap(id) end
+  for _,id in ipairs({'dropletflowrate','dropletvolumedelta','dropletstatus'}) do capabilities['dictionaryguide60352.'..id]=cap(id) end
   package.loaded['st.capabilities']=capabilities
   package.loaded['st.driver']=function(_,opts) options=opts; return {run=function() end} end
   local sock={settimeout=function() end,connect=function() connects=connects+1; return true end,close=function() end,dohandshake=function() return true end}
@@ -44,7 +44,7 @@ local function test(name,fn) fn();count=count+1;print('ok '..count..' - '..name)
 test('pins authenticated metadata before emitting readings',function()
   local d,v=scenario({{flow=999},{ids='Droplet-ABCD'},{server='Connected',flow=0,volume=-2,high_leak='OFF'}})
   assert(d.fields.droplet_id=='Droplet-ABCD' and d.went_online)
-  assert(d.updated_profile=='droplet' and d.fields.profile_revision==3)
+  assert(d.updated_profile=='droplet' and d.fields.profile_revision==4)
   assert(#v('flow')==1 and v('flow')[1].value==0)
   assert(v('volumeDelta')[1].value==-2)
 end)
@@ -84,5 +84,10 @@ test('US gallons conversion and switching back preserve original measurement',fu
   local events=v('flow'); assert(events[#events].value==7.570823568 and events[#events].unit=='L/min')
   d.preferences.flowUnit='gpm'; opts.lifecycle_handlers.infoChanged({},d)
   events=v('flow'); assert(events[#events].value==2 and d.spawns==spawns)
+end)
+test('rejected flow event does not interrupt other sensor reports',function()
+  local _,v=scenario({{ids='Droplet-ABCD'},{flow=3.785411784,volume=10,server='Connected'},{volume=20}},nil,nil,nil,'gpm',true)
+  assert(#v('flow')==0 and #v('volumeDelta')==2 and v('volumeDelta')[2].value==20)
+  assert(v('server')[1]=='Connected')
 end)
 print(count..' lifecycle tests passed')

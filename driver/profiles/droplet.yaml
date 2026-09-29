@@ -2,7 +2,7 @@ name: droplet
 components:
   - id: main
     capabilities:
-      - id: dictionaryguide60352.dropletflow
+      - id: dictionaryguide60352.dropletflowrate
         version: 1
       - id: dictionaryguide60352.dropletvolumedelta
         version: 1
