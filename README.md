@@ -4,6 +4,21 @@ An unofficial SmartThings Edge driver that connects directly to Hydrific Droplet
 
 **Status:** Development driver installed and paired successfully with a physical Droplet. Live flow, volume changes, server connectivity, and signal readings are verified. Local protocol and lifecycle tests pass. High/unusual flow alert delivery remains under investigation; do not assume unavailable alerts mean normal.
 
+## In the SmartThings app
+
+Screenshots from the paired device on September 29, 2026. Click an image to view it at full size.
+
+<table>
+  <tr><th>Controls</th><th>Routines</th><th>History</th></tr>
+  <tr>
+    <td><a href="docs/images/controls.png"><img src="docs/images/controls.png" width="260" alt="Droplet controls showing 0 US gal/min, volume change, online connections, strong signal, and unavailable alert statuses"></a></td>
+    <td><a href="docs/images/routines.png"><img src="docs/images/routines.png" width="260" alt="An enabled user-created routine named Send text message High water flow for more than 15 minutes"></a></td>
+    <td><a href="docs/images/history.png"><img src="docs/images/history.png" width="260" alt="Device history showing flow readings including 0.04 gal/min and volume changes in milliliters"></a></td>
+  </tr>
+</table>
+
+Controls and History show US gallons per minute working, including a nonzero flow reading. Volume change remains in milliliters. The Routines screenshot shows an enabled user-created routine; it does not verify its conditions or successful notification delivery. The alert dashes mean status unavailable, as described in the [firmware note](#firmware-141-unavailable-alert-status).
+
 ## Setup
 
 1. In the **Droplet** app, open **Settings → Smart Home Integrations → Home Assistant** (sometimes labeled **Home Assistant Core**). Enable it and keep the displayed pairing code. Give Droplet a minute or two to enable the service.
@@ -24,6 +39,18 @@ The code is stored as a SmartThings device preference, not in this repository. D
 The driver does not turn unavailable alerts into a clear state. Alerts become unknown after disconnect, loss of Hydrific server connectivity, or 90 seconds without an alert update. Existing flow/volume values can remain visible as historical values when the device is offline.
 
 Alert conditions can be used in SmartThings routines through the custom status capability. Hydrific's high/unusual flow detection requires its server connection and compatible firmware (v1.4.0 or later). Local measurements do not require Hydrific cloud connectivity.
+
+## Choosing flow units
+
+Open **Hydrific Droplet → ⋮ → Settings → Flow units** and choose **Liters/min (L/min)** or **US gallons/min (gal/min)**. The default is liters. The conversion uses **1 US gallon = 3.785411784 liters**; these are not Imperial gallons.
+
+Changing units updates the latest flow reading, including when it is zero, without reconnecting Droplet. Both directions have been checked on the physical hub. The unit setting applies to flow only; volume change stays in mL. Older History entries retain the units recorded at the time.
+
+## Routines
+
+A routine can use the numeric **Flow rate** condition to compare the reading with a chosen threshold. Review the threshold and displayed unit after changing flow units. Test the complete routine separately before relying on its notification action; an enabled toggle alone does not establish that it has triggered successfully.
+
+Numeric flow conditions and Hydrific's **High flow / Unusual flow** statuses are separate inputs. While the latter show **—**, they cannot provide a current clear/detected status for a routine. The driver does not reproduce Hydrific's cloud alert detection from the numeric flow reading.
 
 ## Discovery and identity
 
@@ -47,7 +74,13 @@ smartthings edge:drivers:package driver --build-only dist/droplet.zip
 
 Create `dist/` before building. `driver/` contains the deployable Lua sources and device profile; `capabilities/` contains the custom capabilities and their mobile presentations. The English display labels are defined in `capabilities/*.en.json`. Apply those using `smartthings capabilities:translations:upsert`; use `capabilities:presentation:update` for existing presentations. The current profile references capability IDs in the development account's namespace. Other developers must create capabilities in their own namespace and update those references.
 
+The source code lives in this GitHub repository. Packaged driver versions are uploaded to SmartThings under the developer account, assigned to a channel, and installed on the hub, where the driver runs locally. To inspect your hub, open [SmartThings Advanced → Hubs](https://my.smartthings.com/advanced/hubs/).
+
 The development channel is **Hydrific Droplet** and uses the published [terms of use](https://github.com/hexbus/droplet-smartthings/blob/main/TERMS.md). No public sharing invitation has been created. The public repository alone does not grant channel access.
+
+### Flow capability migration
+
+The active flow capability is `dictionaryguide60352.dropletflowrate`; the original `dropletflow` files are retained as legacy definitions. Updating the original unit enum did not refresh the hub's cached schema, so existing devices migrate automatically to the new capability. Existing routines referencing the original flow capability must select the new Flow rate condition again. Pairing and other capabilities are retained.
 
 ## Firmware 1.4.1: unavailable alert status
 
@@ -57,7 +90,6 @@ Another developer [reported the same missing fields after upgrading from v1.4.0 
 
 The driver keeps these statuses unavailable (**—**) until valid alert messages arrive. Re-pairing or changing alert thresholds is not an established workaround. Flow and volume reporting can continue independently.
 
-The active flow capability is `dictionaryguide60352.dropletflowrate`; the original `dropletflow` files are retained as legacy definitions. Updating the original unit enum did not refresh the hub's cached schema, so existing devices migrate automatically to the new capability. Existing routines referencing the original flow capability must select the new Flow rate condition again. Pairing and other capabilities are retained.
 
 ## Troubleshooting
 
