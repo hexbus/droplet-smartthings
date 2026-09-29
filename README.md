@@ -10,7 +10,7 @@ An unofficial SmartThings Edge driver that connects directly to Hydrific Droplet
 2. Install this Edge driver on your SmartThings hub through your development channel.
 3. In the **SmartThings** mobile app, use **Add device → Scan nearby** while your hub and Droplet are on the same local network.
 4. Open the discovered **Hydrific Droplet** device and enter its **Droplet pairing code** in device **Settings**. Leave the optional IP address blank to use discovery.
-5. Allow up to a minute for alert readings to arrive. Check that connection status says **Connected**.
+5. Check that connection status says **Online**. Alert readings normally arrive separately; see the firmware note below if they remain **—**.
 
 The code is stored as a SmartThings device preference, not in this repository. Do not put pairing codes, device credentials, or personal network details in GitHub issues.
 
@@ -35,7 +35,7 @@ The optional address field overrides discovery for an already discovered device;
 
 Connections use TLS to the local `/ws` endpoint. Hydrific's documented protocol uses a device certificate without CA/hostname verification; this driver follows that behavior and only connects to private or link-local IPv4 addresses. Encryption does not authenticate the server certificate, so use a trusted LAN. Device-ID pinning is an additional consistency check, not cryptographic certificate pinning. No network/router security settings are changed.
 
-The driver does not log pairing codes, authorization headers, or sensor payloads. It reconnects with bounded backoff and handles server ping/pong frames. Hydrific documents at most two simultaneous WebSocket clients. For troubleshooting, prefer a single client: [an upstream firmware report](https://github.com/Hydrific/pydroplet/issues/9) describes missed frames with concurrent clients. The driver logs a one-time count of received and recognized alert fields after its initial 90 seconds, without logging the pairing code or raw message contents.
+The driver does not log pairing codes, authorization headers, or sensor payloads. It reconnects with bounded backoff and handles server ping/pong frames. Hydrific documents at most two simultaneous WebSocket clients. An [upstream report](https://github.com/Hydrific/pydroplet/issues/9#issuecomment-5820758888) says v1.4.1 fixed the concurrent-client frame loss seen on v1.4.0, but also reports connection eviction when additional connections are attempted. Avoid extra diagnostic connections during normal operation. The driver logs a one-time count of received and recognized alert fields after its initial 90 seconds, without logging the pairing code or raw message contents.
 
 ## Development
 
@@ -48,6 +48,14 @@ smartthings edge:drivers:package driver --build-only dist/droplet.zip
 Create `dist/` before building. `driver/` contains the deployable Lua sources and device profile; `capabilities/` contains the custom capabilities and their mobile presentations. The English display labels are defined in `capabilities/*.en.json`. Apply those using `smartthings capabilities:translations:upsert`; use `capabilities:presentation:update` for existing presentations. The current profile references capability IDs in the development account's namespace. Other developers must create capabilities in their own namespace and update those references.
 
 The development channel is **Hydrific Droplet** and uses the published [terms of use](https://github.com/hexbus/droplet-smartthings/blob/main/TERMS.md). No public sharing invitation has been created. The public repository alone does not grant channel access.
+
+## Firmware 1.4.1: unavailable alert status
+
+As of September 29, 2026, our physical-device checks on v1.4.1 receive flow, volume, server connectivity, and signal, but no `high_leak` or `low_leak` fields. Both alerts are configured in the Droplet app, which reports normal. A hub-only 90-second observation received three state reports and zero alert fields; separate local-client observations also received no alert fields.
+
+Another developer [reported the same missing fields after upgrading from v1.4.0 to v1.4.1](https://github.com/Hydrific/pydroplet/issues/9#issuecomment-5820758888). A Hydrific maintainer [said the remaining issues were being investigated](https://github.com/Hydrific/pydroplet/issues/9#issuecomment-5834208136). This is evidence of a possible firmware regression, not a confirmed root cause or a promised fix date.
+
+The driver keeps these statuses unavailable (**—**) until valid alert messages arrive. Re-pairing or changing alert thresholds is not an established workaround. Flow and volume reporting can continue independently.
 
 ## Troubleshooting
 
