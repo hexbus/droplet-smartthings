@@ -11,7 +11,8 @@
           "unit": {
             "type": "string",
             "enum": [
-              "L/min"
+              "L/min",
+              "gal/min"
             ],
             "default": "L/min"
           }

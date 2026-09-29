@@ -1,9 +1,9 @@
 -- Run the actual driver lifecycle against mocked Edge APIs.
 package.path='driver/src/?.lua;'..package.path
 local count=0
-local function scenario(messages,pinned,code,manual)
+local function scenario(messages,pinned,code,manual,unit)
   local options,task,time,connects=nil,nil,0,0
-  local device={id='test-device',device_network_id='droplet:droplet-test.local',preferences={pairingCode=code or 'TESTCODE',ipAddress=manual or ''},events={},fields={droplet_id=pinned}}
+  local device={id='test-device',device_network_id='droplet:droplet-test.local',preferences={pairingCode=code or 'TESTCODE',ipAddress=manual or '',flowUnit=unit},events={},fields={droplet_id=pinned}}
   function device:emit_event(e) self.events[#self.events+1]=e end
   function device:set_field(k,v) self.fields[k]=v end
   function device:get_field(k) return self.fields[k] end
@@ -18,7 +18,7 @@ local function scenario(messages,pinned,code,manual)
   package.loaded['st.capabilities']=capabilities
   package.loaded['st.driver']=function(_,opts) options=opts; return {run=function() end} end
   local sock={settimeout=function() end,connect=function() connects=connects+1; return true end,close=function() end,dohandshake=function() return true end}
-  package.loaded.cosock={socket={tcp=function() return sock end,gettime=function() return time end,sleep=function() error('END TEST') end},spawn=function(fn) task=fn end}
+  package.loaded.cosock={socket={tcp=function() return sock end,gettime=function() return time end,sleep=function() error('END TEST') end},spawn=function(fn) task=fn; device.spawns=(device.spawns or 0)+1 end}
   package.loaded['cosock.ssl']={wrap=function() return sock end}
   package.loaded['st.mdns']={discover=function() return {found={{host_info={name='droplet-test.local',address='192.168.1.20',port=443}}}} end}
   package.loaded['st.json']={decode=function(value) return value end}
@@ -44,7 +44,7 @@ local function test(name,fn) fn();count=count+1;print('ok '..count..' - '..name)
 test('pins authenticated metadata before emitting readings',function()
   local d,v=scenario({{flow=999},{ids='Droplet-ABCD'},{server='Connected',flow=0,volume=-2,high_leak='OFF'}})
   assert(d.fields.droplet_id=='Droplet-ABCD' and d.went_online)
-  assert(d.updated_profile=='droplet' and d.fields.profile_revision==2)
+  assert(d.updated_profile=='droplet' and d.fields.profile_revision==3)
   assert(#v('flow')==1 and v('flow')[1].value==0)
   assert(v('volumeDelta')[1].value==-2)
 end)
@@ -74,5 +74,15 @@ end)
 test('metadata deadline prevents unauthenticated sensor updates',function()
   local d,v=scenario({{advance=16,flow=5}})
   assert(not d.went_online and #v('flow')==0)
+end)
+test('US gallons conversion and switching back preserve original measurement',function()
+  local d,v,_,opts=scenario({{ids='Droplet-ABCD'},{flow=3.785411784},{flow=0},{flow=7.570823568}},nil,nil,nil,'gpm')
+  assert(v('flow')[1].value==1 and v('flow')[1].unit=='gal/min')
+  assert(v('flow')[2].value==0 and v('flow')[3].value==2)
+  local spawns=d.spawns
+  d.preferences.flowUnit='lpm'; opts.lifecycle_handlers.infoChanged({},d)
+  local events=v('flow'); assert(events[#events].value==7.570823568 and events[#events].unit=='L/min')
+  d.preferences.flowUnit='gpm'; opts.lifecycle_handlers.infoChanged({},d)
+  events=v('flow'); assert(events[#events].value==2 and d.spawns==spawns)
 end)
 print(count..' lifecycle tests passed')

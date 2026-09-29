@@ -16,7 +16,7 @@ The code is stored as a SmartThings device preference, not in this repository. D
 
 ## Readings
 
-- Current flow, in L/min.
+- Current flow, selectable as L/min or US gal/min in device **Settings → Flow units**. The default is L/min; changing units updates the last reading immediately. Review existing flow-based routine thresholds when changing units.
 - Volume **since the preceding Droplet report**, in mL. This is not a daily or lifetime total. Small negative values are retained.
 - Sensor signal and Hydrific server connectivity.
 - High flow and unusual flow alerts: `detected`, `clear`, or `unknown` (displayed as **Alert**, **Clear**, or **—**). A dash means no current alert status is available; it does not mean clear.

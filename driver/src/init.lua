@@ -36,6 +36,10 @@ local function stop(device)
   local session = sessions[device.id]
   if session then session.stopped=true; close(session); sessions[device.id]=nil end
 end
+local function emit_flow(device, liters)
+  local gallons=device.preferences.flowUnit=='gpm'
+  device:emit_event(flow.flow({value=gallons and liters/3.785411784 or liters,unit=gallons and 'gal/min' or 'L/min'}))
+end
 local function emit_readings(device, session, msg)
   local values=readings.parse(msg)
   if values.flow or values.volumeDelta then session.state_count=session.state_count+1 end
@@ -43,7 +47,7 @@ local function emit_readings(device, session, msg)
   if msg.low_leak~=nil then session.low_count=session.low_count+1 end
   if values.highFlow then session.high_valid=session.high_valid+1 end
   if values.unusualFlow then session.low_valid=session.low_valid+1 end
-  if values.flow then device:emit_event(flow.flow({value=values.flow,unit='L/min'})) end
+  if values.flow then device:set_field('last_flow_lpm',values.flow); emit_flow(device,values.flow) end
   if values.volumeDelta then device:emit_event(volume.volumeDelta({value=values.volumeDelta,unit='mL'})) end
   for _, key in ipairs({'server','signal'}) do if values[key] then event(device,key,values[key]) end end
   if values.server then session.server=values.server end
@@ -110,7 +114,7 @@ local function start(driver,device)
   stop(device)
   local code=(device.preferences.pairingCode or ''):gsub('%s',''):upper()
   if code=='' then device:offline(); event(device,'connection','Enter pairing code in Settings'); unknown_alerts(device); return end
-  local session={stopped=false}
+  local session={stopped=false,pairing_code=code,ip_address=device.preferences.ipAddress or ''}
   sessions[device.id]=session
   cosock.spawn(function()
     local backoff=5
@@ -138,6 +142,15 @@ local function start(driver,device)
     end
   end,'droplet-connection')
 end
+local function info_changed(driver,device)
+  local liters=device:get_field('last_flow_lpm')
+  if liters~=nil then emit_flow(device,liters) end
+  local session=sessions[device.id]
+  local code=(device.preferences.pairingCode or ''):gsub('%s',''):upper()
+  if not session or session.pairing_code~=code or session.ip_address~=(device.preferences.ipAddress or '') then
+    start(driver,device)
+  end
+end
 local function discovery(driver)
   local found=find_droplets()
   local existing={}
@@ -150,17 +163,17 @@ local function discovery(driver)
   end
 end
 local function init(driver,device)
-  -- Apply updated preference wording to devices paired with the first profile.
-  if device:get_field('profile_revision') ~= 2 then
+  -- Apply the flow-unit preference to already paired devices.
+  if device:get_field('profile_revision') ~= 3 then
     device:try_update_metadata({profile='droplet'})
-    device:set_field('profile_revision',2,{persist=true})
+    device:set_field('profile_revision',3,{persist=true})
   end
   start(driver,device)
 end
 local driver=Driver('hydrific-droplet',{
   discovery=discovery,
   supported_capabilities={flow,volume,status,caps.refresh},
-  lifecycle_handlers={init=init,infoChanged=start,removed=function(_,device) stop(device) end},
+  lifecycle_handlers={init=init,infoChanged=info_changed,removed=function(_,device) stop(device) end},
   capability_handlers={[caps.refresh.ID]={[caps.refresh.commands.refresh.NAME]=start}}
 })
 driver:run()

@@ -2,7 +2,7 @@
   "dashboard": {
     "states": [
       {
-        "label": "{{flow.value}} L/min"
+        "label": "{{flow.value}} {{flow.unit}}"
       }
     ],
     "actions": [],
@@ -13,7 +13,7 @@
       "label": "Flow rate",
       "displayType": "state",
       "state": {
-        "label": "{{flow.value}} L/min"
+        "label": "{{flow.value}} {{flow.unit}}"
       }
     }
   ],
@@ -25,7 +25,7 @@
         "numberField": {
           "value": "flow.value",
           "valueType": "number",
-          "unit": "L/min"
+          "unit": "flow.unit"
         }
       }
     ],

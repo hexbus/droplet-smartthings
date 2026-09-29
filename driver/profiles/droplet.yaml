@@ -29,3 +29,13 @@ preferences:
       minLength: 0
       maxLength: 15
       default: ""
+  - name: flowUnit
+    title: Flow units
+    description: Choose liters or US gallons per minute. Review flow-based routine thresholds after changing units.
+    required: false
+    preferenceType: enumeration
+    definition:
+      options:
+        lpm: Liters/min (L/min)
+        gpm: US gallons/min (gal/min)
+      default: lpm
