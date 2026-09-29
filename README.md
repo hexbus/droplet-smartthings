@@ -17,6 +17,6 @@ Planned data path: Hydrific Droplet → MQTT broker → SmartThings Edge driver.
 
 ## Driver channel
 
-Channel creation is pending publication of [TERMS.md](TERMS.md) at a publicly accessible URL.
+A development channel named **Hydrific Droplet** has been created in SmartThings using the published [terms of use](https://github.com/hexbus/droplet-smartthings/blob/main/TERMS.md). No sharing invitation has been created. Hub enrollment and driver installation are pending.
 
 This project is not affiliated with or endorsed by Hydrific or Samsung SmartThings.
