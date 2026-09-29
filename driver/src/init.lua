@@ -38,8 +38,11 @@ local function stop(device)
 end
 local function emit_flow(device, liters)
   local gallons=device.preferences.flowUnit=='gpm'
-  local ok,result=pcall(flow.flow,{value=gallons and liters/3.785411784 or liters,unit=gallons and 'gal/min' or 'L/min'})
-  if ok then device:emit_event(result)
+  local unit=gallons and 'gal/min' or 'L/min'
+  -- A unit-only change (especially zero flow) must propagate to cloud/app state.
+  local metadata=device:get_field('last_flow_unit')~=unit and {state_change=true} or nil
+  local ok,result=pcall(flow.flow,{value=gallons and liters/3.785411784 or liters,unit=unit},metadata)
+  if ok then device:emit_event(result); device:set_field('last_flow_unit',unit)
   else log.warn('Flow event validation failed: '..tostring(result)) end
 end
 local function emit_readings(device, session, msg)

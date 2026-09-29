@@ -11,7 +11,7 @@ local function scenario(messages,pinned,code,manual,unit,reject_flow)
   function device:online() self.went_online=true end
   function device:offline() self.went_offline=true end
   local function cap(id)
-    return setmetatable({ID=id},{__index=function(_,attribute) return function(value) if reject_flow and attribute=='flow' then error('Unsupported flow unit') end; return {id=id,attribute=attribute,value=value} end end})
+    return setmetatable({ID=id},{__index=function(_,attribute) return function(value,metadata) if reject_flow and attribute=='flow' then error('Unsupported flow unit') end; return {id=id,attribute=attribute,value=value,metadata=metadata} end end})
   end
   local capabilities={refresh={ID='refresh',commands={refresh={NAME='refresh'}}}}
   for _,id in ipairs({'dropletflowrate','dropletvolumedelta','dropletstatus'}) do capabilities['dictionaryguide60352.'..id]=cap(id) end
@@ -89,5 +89,11 @@ test('rejected flow event does not interrupt other sensor reports',function()
   local _,v=scenario({{ids='Droplet-ABCD'},{flow=3.785411784,volume=10,server='Connected'},{volume=20}},nil,nil,nil,'gpm',true)
   assert(#v('flow')==0 and #v('volumeDelta')==2 and v('volumeDelta')[2].value==20)
   assert(v('server')[1]=='Connected')
+end)
+test('zero-flow unit changes explicitly propagate to the app',function()
+  local d,_,_,opts=scenario({{ids='Droplet-ABCD'},{flow=0}},nil,nil,nil,'lpm')
+  d.preferences.flowUnit='gpm'; opts.lifecycle_handlers.infoChanged({},d)
+  local e=d.events[#d.events]
+  assert(e.attribute=='flow' and e.value.value==0 and e.value.unit=='gal/min' and e.metadata.state_change)
 end)
 print(count..' lifecycle tests passed')
