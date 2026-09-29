@@ -4,6 +4,12 @@ An unofficial SmartThings Edge driver that connects directly to Hydrific Droplet
 
 **Status:** Development driver installed and paired successfully with a physical Droplet. Live flow, volume changes, server connectivity, and signal readings are verified. Local protocol and lifecycle tests pass. High/unusual flow alert delivery remains under investigation; do not assume unavailable alerts mean normal.
 
+## Community release — experimental
+
+[**Install through the SmartThings community channel**](https://bestow-regional.api.smartthings.com/invite/gV2qYe1EXe29) · [Terms of use](TERMS.md) · [Support policy](SUPPORT.md) · [Release notes](docs/releases.md)
+
+This is an unofficial, as-is community driver. No technical support, maintenance, updates, or response times are promised. It is not certified or endorsed by Samsung or Hydrific. Read the [firmware limitation](#firmware-141-unavailable-alert-status) before installing: high-flow and unusual-flow statuses are unavailable in our current v1.4.1 testing. Do not rely on this driver as your sole means of detecting leaks or preventing water damage.
+
 ## In the SmartThings app
 
 Screenshots from the paired device on September 29, 2026. Click an image to view it at full size.
@@ -22,7 +28,7 @@ Controls and History show US gallons per minute working, including a nonzero flo
 ## Setup
 
 1. In the **Droplet** app, open **Settings → Smart Home Integrations → Home Assistant** (sometimes labeled **Home Assistant Core**). Enable it and keep the displayed pairing code. Give Droplet a minute or two to enable the service.
-2. Install this Edge driver on your SmartThings hub through your development channel.
+2. Open the [community installation invitation](https://bestow-regional.api.smartthings.com/invite/gV2qYe1EXe29) and sign in to the Samsung account that owns your hub. Review the terms, enroll your hub in **Hydrific Droplet — Community (Experimental)**, and install **Hydrific Droplet** from the available drivers. A compatible SmartThings Edge hub is required; no developer tools are needed for this installation.
 3. In the **SmartThings** mobile app, use **Add device → Scan nearby** while your hub and Droplet are on the same local network.
 4. Open the discovered **Hydrific Droplet** device and enter its **Droplet pairing code** in device **Settings**. Leave the optional IP address blank to use discovery.
 5. Check that connection status says **Online**. Alert readings normally arrive separately; see the firmware note below if they remain **—**.
@@ -76,7 +82,7 @@ Create `dist/` before building. `driver/` contains the deployable Lua sources an
 
 The source code lives in this GitHub repository. Packaged driver versions are uploaded to SmartThings under the developer account, assigned to a channel, and installed on the hub, where the driver runs locally. To inspect your hub, open [SmartThings Advanced → Hubs](https://my.smartthings.com/advanced/hubs/).
 
-The development channel is **Hydrific Droplet** and uses the published [terms of use](https://github.com/hexbus/droplet-smartthings/blob/main/TERMS.md). No public sharing invitation has been created. The public repository alone does not grant channel access.
+The public channel is **Hydrific Droplet — Community (Experimental)**. The separate **Hydrific Droplet** channel is used for development. Both use the published [terms of use](TERMS.md). The public channel is assigned a specific tested version; uploading a development build alone does not promote it to the community channel. The installation invitation provides channel access; this is not an official SmartThings catalog listing.
 
 ### Flow capability migration
 
@@ -97,6 +103,10 @@ The driver keeps these statuses unavailable (**—**) until valid alert messages
 - The pairing preference is text even if the mobile app displays a length range. Enter the letters and numbers from Droplet. The driver strips whitespace and accepts lowercase entry.
 - If flow works but alerts remain unavailable, confirm alert configuration in Droplet and cloud connectivity. Do not replace missing alert fields with `clear`. Use the driver diagnostic counts to distinguish absent messages from unrecognized values.
 - If the CLI intermittently returns an undefined HTTP status on a dual-stack Mac, retry the command with `NODE_OPTIONS=--dns-result-order=ipv4first`; this affects that command only.
+
+## License and support
+
+Released under the [MIT License](LICENSE). Anyone may use, fork, modify, redistribute, or sell copies, provided the copyright and license notice are retained. Forks do not have to remain open source. No warranty or author support is provided; see the [support policy](SUPPORT.md) and [channel terms](TERMS.md).
 
 ## References
 
